@@ -111,16 +111,17 @@ def run_k_fold(x, y, taus, k):
     sample_size = int(x.shape[0]/k)
     loss = []
     for i in range(k):
+        train_idex_list = [
+            j for j in range(x.shape[0])
+            if j <sample_size*i or j>=sample_size*(i+1)]
         temp_loss = run_on_fold(
             x[sample_size*i:sample_size*(i+1)],
             y[sample_size*i:sample_size*(i+1)],
-            x[sample_size*(i+1):],
-            y[sample_size*(i+1):],
+            x[train_idex_list],
+            y[train_idex_list],
             taus
         )
         loss.append(temp_loss)
-        print(i)
-        print(sample_size)
     return np.array(loss)
 
 

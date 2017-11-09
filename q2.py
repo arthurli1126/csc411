@@ -130,6 +130,6 @@ if __name__ == "__main__":
     # In this excersice we fixed lambda (hard coded to 1e-5) and only set tau value. Feel free to play with lambda as well if you wish
     taus = np.logspace(1.0, 3, 200)
     losses = run_k_fold(x, y, taus, k=5)
-    plt.plot(taus,losses.transpose())
+    plt.plot(taus,np.mean(losses.transpose(),axis=1))
     plt.show()
     print("min loss = {}".format(losses.min()))

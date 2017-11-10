@@ -123,9 +123,9 @@ def main():
     # Example usage:
     #predicted_label = knn.query_knn(test_data[0], 3)
     #print(predicted_label)
-    print(classification_accuracy(knn,1,test_data,test_labels))
-    print(classification_accuracy(knn,15, test_data,test_labels))
-    print(cross_validation(train_data,train_labels))
+    #print(classification_accuracy(knn,1,test_data,test_labels))
+    print(classification_accuracy(knn,1, test_data,test_labels))
+    #print(cross_validation(train_data,train_labels))
 
 
 if __name__ == '__main__':

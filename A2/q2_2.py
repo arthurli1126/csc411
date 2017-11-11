@@ -42,6 +42,22 @@ def compute_sigma_mles(train_data, train_labels):
                     covariances[k][j][i] = covariances[k][j][i] + 0.01
     return covariances
 
+def cov_compute_sigma_mles(train_data, train_labels):
+    '''
+    Compute the covariance estimate for each digit class
+
+    Should return a three dimensional numpy array of shape (10, 64, 64)
+    consisting of a covariance matrix for each digit class
+    '''
+    covariances = np.zeros((10, 64, 64))
+    # Compute covariances
+    for k in range(10):
+        i_digits = data.get_digits_by_label(train_data, train_labels, k)
+        covariances[k] = np.cov(i_digits.T)
+    return covariances
+
+
+
 def plot_cov_diagonal(covariances):
     # Plot the log-diagonal of each covariance matrix side by side
     cov_diag = np.zeros((10,8,8))
@@ -66,6 +82,8 @@ def generative_likelihood(digits, means, covariances):
             sec = -0.5* (digits[i]- means[k]).transpose()
             third = np.linalg.inv(covariances[k])
             final = first_part * np.exp(np.dot(sec,third).dot(digits[i] - means[k]))
+            # if final>1:
+            #     print("final: %s first: %s sec: %s third %s" %(final,first_part,sec,third))
             g_likelihood[i][k] = np.log(final)
     return g_likelihood
 
@@ -78,7 +96,10 @@ def conditional_likelihood(digits, means, covariances):
     This should be a numpy array of shape (n, 10)
     Where n is the number of datapoints and 10 corresponds to each digit class
     '''
-    return None
+    gl = np.exp(generative_likelihood(digits,means, covariances))
+    p_y = 0.1
+    p_x = np.sum(gl*p_y, axis=1).reshape(-1,1)
+    return np.log(gl) + np.log(p_y) - np.log(p_x)
 
 def avg_conditional_likelihood(digits, labels, means, covariances):
     '''
@@ -89,9 +110,13 @@ def avg_conditional_likelihood(digits, labels, means, covariances):
     i.e. the average log likelihood that the model assigns to the correct class label
     '''
     cond_likelihood = conditional_likelihood(digits, means, covariances)
-
+    total = 0
     # Compute as described above and return
-    return None
+    for i in range(digits.shape[0]):
+        correct_class = labels[i]
+        total += cond_likelihood[i][int(correct_class)]
+
+    return total/digits.shape[0]
 
 def classify_data(digits, means, covariances):
     '''
@@ -99,7 +124,17 @@ def classify_data(digits, means, covariances):
     '''
     cond_likelihood = conditional_likelihood(digits, means, covariances)
     # Compute and return the most likely class
-    pass
+    classes = np.zeros((digits.shape[0],1))
+    for i in range(digits.shape[0]):
+        classes[i] = np.where(cond_likelihood[i] == cond_likelihood[i].max())
+    return classes
+
+def eval_accuracy(predicted_labels, true_labels):
+    match = 0
+    for i in range(predicted_labels.shape[0]):
+        if int(predicted_labels[i])== int(true_labels[i]):
+            match+=1
+    return match/predicted_labels.shape[0]
 
 def main():
     train_data, train_labels, test_data, test_labels = data.load_all_data('data')
@@ -107,15 +142,25 @@ def main():
     # Fit the model
     means = compute_mean_mles(train_data, train_labels)
     covariances = compute_sigma_mles(train_data, train_labels)
-
+    cov = cov_compute_sigma_mles(train_data, train_labels)
     # print(means)
-    # print(covariances)
+    # print(np.max(covariances))
+    # print(np.max(cov))
+    # print(np.linalg.det(cov)**-0.5)
     #plot_cov_diagonal(covariances)
 
-    g_lh = generative_likelihood(train_data,means,covariances)
+    #g_lh = generative_likelihood(train_data,means,covariances)
+    #c_lh = conditional_likelihood(train_data,means,covariances)
+    #print(np.sum(g_lh))
+    #print(np.sum(np.exp(c_lh)))
 
-    print(g_lh)
+    # avg_clh = avg_conditional_likelihood(test_data, test_labels, means, covariances)
+    # print(avg_clh)
     # Evaluation
+
+    classes = classify_data(train_data, means, covariances)
+
+    print(eval_accuracy(classes, train_labels))
 
 if __name__ == '__main__':
     main()

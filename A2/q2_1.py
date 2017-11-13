@@ -66,7 +66,7 @@ class KNearestNeighbor(object):
             major_digit = [k for k,v in counts.items() if v == major_count]
             if len(major_digit)==1:
                 digit = major_digit[0]
-                print("k: %s major: %s" %(k-j,major_digit))
+                #print("k: %s major: %s" %(k-j,major_digit))
                 break
             j = j+1
 
@@ -109,7 +109,7 @@ def classification_accuracy(knn, k, eval_data, eval_labels):
     index = 0
     for i in eval_data:
         knn_label = knn.query_knn(i,k)
-        print("knn labbel %s" %knn_label)
+        #print("knn labbel %s" %knn_label)
         if knn_label == eval_labels[index]:
             match = match + 1
         index = index+1
@@ -123,10 +123,19 @@ def main():
     # Example usage:
     #predicted_label = knn.query_knn(test_data[0], 3)
     #print(predicted_label)
-    #print(classification_accuracy(knn,1,test_data,test_labels))
-    print(classification_accuracy(knn,1, test_data,test_labels))
-    #print(cross_validation(train_data,train_labels))
+    acc_test_1 = classification_accuracy(knn,1,test_data,test_labels)
+    acc_test_15 = classification_accuracy(knn,15,test_data,test_labels)
+    acc_train_1 = classification_accuracy(knn, 1, train_data, train_labels)
+    acc_train_15 = classification_accuracy(knn, 15, train_data, train_labels)
+    acc_train_3 = classification_accuracy(knn, 3, train_data, train_labels)
+    acc_test_3 = classification_accuracy(knn, 3, test_data, test_labels)
+    print("acc_test_1: %s acc_test_15: %s acc_train_1:%s acc_train_15:%s"
+          %(acc_test_1,acc_test_15,acc_train_1,acc_train_15))
+    print(acc_train_3)
+    print(acc_test_3)
+    cv = cross_validation(train_data,train_labels)
 
+    print(cv)
 
 if __name__ == '__main__':
     main()

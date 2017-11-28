@@ -8,7 +8,7 @@ import sklearn
 import numpy as np
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import BernoulliNB, MultinomialNB
 
 def load_data():
     # import and filter data
@@ -42,6 +42,7 @@ def bnb_baseline(bow_train, train_labels, bow_test, test_labels):
     binary_train = (bow_train>0).astype(int)
     binary_test = (bow_test>0).astype(int)
 
+    print(type(binary_test))
     model = BernoulliNB()
     model.fit(binary_train, train_labels)
 
@@ -53,8 +54,37 @@ def bnb_baseline(bow_train, train_labels, bow_test, test_labels):
 
     return model
 
+def mnb_model(train_tf_idf, train_labels, test_tf_idf, test_labels):
+    # training the model
+    train_tf_idf = train_tf_idf
+    test_tf_idf = test_tf_idf
+
+    model = MultinomialNB()
+
+    model.fit(train_tf_idf, train_labels)
+
+    # evaluate the model
+    train_prediction = model.predict(train_tf_idf)
+    test_prediction = model.predict(test_tf_idf)
+
+    print('gaussian train accuracy = %s' %((train_prediction== train_labels).mean()))
+
+    print('gaussian test accuracy = %s' % ((test_prediction == test_labels).mean()))
+
+    return model
+
+
 if __name__ == '__main__':
     train_data, test_data = load_data()
-    train_bow, test_bow, feature_names = bow_features(train_data, test_data)
 
-    bnb_model = bnb_baseline(train_bow, train_data.target, test_bow, test_data.target)
+    train_bow, test_bow, feature_names = bow_features(train_data, test_data)
+    train_tf_idf,test_tf_idf, feature_names = tf_idf_features(train_data, test_data)
+    print(train_bow.shape)
+    print(test_bow.shape)
+    print(train_tf_idf.shape)
+    #print(train_tf_idf[0])
+    print(test_tf_idf.shape)
+
+    mnb_model  = mnb_model(train_tf_idf, train_data.target, test_tf_idf, test_data.target)
+
+    #bnb_model = bnb_baseline(train_bow, train_data.target, test_bow, test_data.target)

@@ -1,9 +1,10 @@
-import numpy as np 
+import numpy as np
 
 from sklearn.datasets import fetch_mldata
 import matplotlib.pyplot as plt
 
 np.random.seed(1847)
+
 
 class BatchSampler(object):
     '''
@@ -11,7 +12,7 @@ class BatchSampler(object):
 
     You shouldn't need to touch this.
     '''
-    
+
     def __init__(self, data, targets, batch_size):
         self.num_points = data.shape[0]
         self.features = data.shape[1]
@@ -32,7 +33,7 @@ class BatchSampler(object):
             indices = np.random.choice(self.indices, self.batch_size, replace=False)
         else:
             indices = np.random.choice(self.indices, m, replace=False)
-        return indices 
+        return indices
 
     def get_batch(self, m=None):
         '''
@@ -43,7 +44,8 @@ class BatchSampler(object):
         indices = self.random_batch_indices(m)
         X_batch = np.take(self.data, indices, 0)
         y_batch = self.targets[indices]
-        return X_batch, y_batch  
+        return X_batch, y_batch
+
 
 class GDOptimizer(object):
     '''
@@ -57,7 +59,10 @@ class GDOptimizer(object):
     def update_params(self, params, grad):
         # Update parameters using GD with momentum and return
         # the updated parameters
-        return None
+        self.beta = (-1)*self.lr*grad + 0.9*self.beta
+        params = params + self.beta
+        return params
+
 
 class SVM(object):
     '''
@@ -67,7 +72,7 @@ class SVM(object):
     def __init__(self, c, feature_count):
         self.c = c
         self.w = np.random.normal(0.0, 0.1, feature_count)
-        
+
     def hinge_loss(self, X, y):
         '''
         Compute the hinge-loss for input data X (shape (n, m)) with target y (shape (n,)).
@@ -96,6 +101,7 @@ class SVM(object):
         # Classify points as +1 or -1
         return None
 
+
 def load_data():
     '''
     Load MNIST data (4 and 9 only) and split into train and test
@@ -122,10 +128,12 @@ def load_data():
     print("-------------------------------")
     return train_data, train_targets, test_data, test_targets
 
+
 def optimize_test_function(optimizer, w_init=10.0, steps=200):
     '''
     Optimize the simple quadratic test function and return the parameter history.
     '''
+
     def func(x):
         return 0.01 * x * x
 
@@ -140,11 +148,36 @@ def optimize_test_function(optimizer, w_init=10.0, steps=200):
         pass
     return w_history
 
+
 def optimize_svm(train_data, train_targets, penalty, optimizer, batchsize, iters):
     '''
     Optimize the SVM with the given hyperparameters. Return the trained SVM.
     '''
     return None
 
+def sgdm_veri():
+    sgdm = GDOptimizer(1)
+    grad = 0.01 * 2 * 10.0
+    param = 10.0
+    params = []
+    for i in range(200):
+        param = sgdm.update_params(param, grad)
+        grad = 0.01 * 2 * param
+        params.append(param)
+
+    sgdm_2 = GDOptimizer(1, 0.9)
+    grad_2 = 0.01 * 2 * 10.0
+    param_2 = 10.0
+    params_2 = []
+    for j in range(200):
+        param_2 = sgdm_2.update_params(param_2, grad_2)
+        grad_2 = 0.01 * 2 * param_2
+        params_2.append(param_2)
+
+    plt.plot(params, 'r', params_2, 'b')
+    plt.show()
+
+
+
 if __name__ == '__main__':
-    pass
+    sgdm_veri()

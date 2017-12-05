@@ -67,9 +67,9 @@ def mnb_model(train_tf_idf, train_labels, test_tf_idf, test_labels):
     train_prediction = model.predict(train_tf_idf)
     test_prediction = model.predict(test_tf_idf)
 
-    print('gaussian train accuracy = %s' %((train_prediction== train_labels).mean()))
+    print('multinomial train accuracy = %s' %((train_prediction== train_labels).mean()))
 
-    print('gaussian test accuracy = %s' % ((test_prediction == test_labels).mean()))
+    print('multinomial test accuracy = %s' % ((test_prediction == test_labels).mean()))
 
     return model
 

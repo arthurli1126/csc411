@@ -59,8 +59,8 @@ class GDOptimizer(object):
     def update_params(self, params, grad):
         # Update parameters using GD with momentum and return
         # the updated parameters
-        self.beta = (-1)*self.lr*grad + 0.9*self.beta
-        params = params + self.beta
+        params[0] = (-1)*self.lr*grad + params[0]*self.beta
+        params[1] = params[1] + params[0]
         return params
 
 
@@ -69,9 +69,10 @@ class SVM(object):
     A Support Vector Machine
     '''
 
-    def __init__(self, c, feature_count):
+    def __init__(self, c, feature_count, b = 0):
         self.c = c
         self.w = np.random.normal(0.0, 0.1, feature_count)
+        self.b = b
 
     def hinge_loss(self, X, y):
         '''
@@ -80,7 +81,14 @@ class SVM(object):
         Returns a length-n vector containing the hinge-loss per data point.
         '''
         # Implement hinge loss
-        return None
+        highe_vector = []
+        temp = 1-y*(np.dot(X,self.w))
+        for i in range(temp.shape[0]):
+            if temp[i]>0:
+                highe_vector.append(temp[i])
+            else:
+                highe_vector.append(0)
+        return highe_vector
 
     def grad(self, X, y):
         '''
@@ -90,7 +98,16 @@ class SVM(object):
         Returns the gradient with respect to the SVM parameters (shape (m,)).
         '''
         # Compute (sub-)gradient of SVM objective
-        return None
+        norm = self.w
+        sec = self.c/y.shape[0]
+        loss = self.hinge_loss(X, y)
+        sub_grad = np.zeros(X.shape[1])
+        for i in range(len(loss)):
+            if(loss[i]!=0):
+                sub_grad = sub_grad - y[i]*X[i]
+
+        return norm+(sec*sub_grad)
+
 
     def classify(self, X):
         '''
@@ -99,7 +116,7 @@ class SVM(object):
         Returns the predicted class labels (shape (n,))
         '''
         # Classify points as +1 or -1
-        return None
+        return np.where(np.dot(X,self.w)>0,1,-1)
 
 
 def load_data():
@@ -129,55 +146,104 @@ def load_data():
     return train_data, train_targets, test_data, test_targets
 
 
-def optimize_test_function(optimizer, w_init=10.0, steps=200):
-    '''
-    Optimize the simple quadratic test function and return the parameter history.
-    '''
-
-    def func(x):
-        return 0.01 * x * x
-
-    def func_grad(x):
-        return 0.02 * x
-
-    w = w_init
-    w_history = [w_init]
-
-    for _ in range(steps):
-        # Optimize and update the history
-        pass
-    return w_history
-
 
 def optimize_svm(train_data, train_targets, penalty, optimizer, batchsize, iters):
     '''
     Optimize the SVM with the given hyperparameters. Return the trained SVM.
     '''
-    return None
+    batch = BatchSampler(train_data, train_targets, batchsize)
+    SVM_train = SVM(penalty,train_data.shape[1])
+    param = [np.zeros_like(SVM_train.w),SVM_train.w]
+    for i in range(iters):
+        X,y =  batch.get_batch()
+        grad = SVM_train.grad(X,y)
+        param = optimizer.update_params(param,grad)
+        SVM_train.w = param[1]
+    return SVM_train
 
-def sgdm_veri():
+def sgdm_verif():
     sgdm = GDOptimizer(1)
     grad = 0.01 * 2 * 10.0
-    param = 10.0
+    param = [0.0, 10.0]
     params = []
     for i in range(200):
         param = sgdm.update_params(param, grad)
-        grad = 0.01 * 2 * param
-        params.append(param)
+        grad = 0.01 * 2 * param[1]
+        params.append(param[1])
 
     sgdm_2 = GDOptimizer(1, 0.9)
     grad_2 = 0.01 * 2 * 10.0
-    param_2 = 10.0
+    param_2 = [0.0, 10.0]
     params_2 = []
     for j in range(200):
         param_2 = sgdm_2.update_params(param_2, grad_2)
-        grad_2 = 0.01 * 2 * param_2
-        params_2.append(param_2)
+        grad_2 = 0.01 * 2 * param_2[1]
+        params_2.append(param_2[1])
 
     plt.plot(params, 'r', params_2, 'b')
     plt.show()
 
 
 
+
+
+
 if __name__ == '__main__':
-    sgdm_veri()
+    #sgdm_verif()
+    train_data, train_targets, test_data, test_targets = load_data()
+    train_data = np.concatenate((np.ones((train_data.shape[0],1)),train_data),axis=1)
+    test_data = np.concatenate((np.ones((test_data.shape[0],1)),test_data),axis=1)
+    optimizer = GDOptimizer(0.05)
+    svm = optimize_svm(train_data,train_targets,1.0,optimizer,100,500)
+    train_result_zero = svm.classify(train_data)
+    train_acuracy_zero = np.where(train_result_zero == train_targets, 1, 0).mean()
+    train_loss_zero = svm.hinge_loss(train_data,train_targets)
+
+    test_result_zero = svm.classify(test_data)
+    test_acuracy_zero = np.where(test_result_zero == test_targets, 1, 0).mean()
+    test_loss_zero = svm.hinge_loss(test_data, test_targets)
+
+    print("train accuracy with B = 0 %s" %train_acuracy_zero)
+    #print("train loss with B = 0 %s" %train_loss_zero)
+
+    print("train accuracy with B = 0 %s" % test_acuracy_zero)
+    #print("train loss with B = 0 %s" % test_loss_zero)
+
+    #print(svm.w.shape)
+
+
+    plt.imshow(svm.w[1:].reshape(28,28), cmap= 'gray')
+    plt.show()
+
+
+
+    optimizer = GDOptimizer(0.05,0.1)
+    svm = optimize_svm(train_data, train_targets, 1.0, optimizer, 100, 500)
+    train_result_1 = svm.classify(train_data)
+    train_acuracy_1 = np.where(train_result_1 == train_targets, 1, 0).mean()
+    train_loss_1 = svm.hinge_loss(train_data, train_targets)
+
+    test_result_1 = svm.classify(test_data)
+    test_acuracy_1 = np.where(test_result_1 == test_targets, 1, 0).mean()
+    test_loss_1 = svm.hinge_loss(test_data, test_targets)
+
+    print("train accuracy with B = 0.1 %s" % train_acuracy_1)
+    # print("train loss with B = 0.1 %s" %train_loss_1)
+
+    print("train accuracy with B = 0.1 %s" % test_acuracy_1)
+    # print("train loss with B = 0.1 %s" % test_loss_zero)
+
+    plt.imshow(svm.w[1:].reshape(28, 28), cmap='gray')
+    plt.show()
+
+
+
+
+
+
+
+
+
+
+
+

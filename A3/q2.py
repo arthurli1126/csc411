@@ -189,7 +189,7 @@ def sgdm_verif():
 
 
 if __name__ == '__main__':
-    #sgdm_verif()
+    sgdm_verif()
     train_data, train_targets, test_data, test_targets = load_data()
     train_data = np.concatenate((np.ones((train_data.shape[0],1)),train_data),axis=1)
     test_data = np.concatenate((np.ones((test_data.shape[0],1)),test_data),axis=1)
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     print("train accuracy with B = 0 %s" %train_acuracy_zero)
     #print("train loss with B = 0 %s" %train_loss_zero)
 
-    print("train accuracy with B = 0 %s" % test_acuracy_zero)
+    print("test accuracy with B = 0 %s" % test_acuracy_zero)
     #print("train loss with B = 0 %s" % test_loss_zero)
 
     #print(svm.w.shape)
@@ -230,7 +230,7 @@ if __name__ == '__main__':
     print("train accuracy with B = 0.1 %s" % train_acuracy_1)
     # print("train loss with B = 0.1 %s" %train_loss_1)
 
-    print("train accuracy with B = 0.1 %s" % test_acuracy_1)
+    print("test accuracy with B = 0.1 %s" % test_acuracy_1)
     # print("train loss with B = 0.1 %s" % test_loss_zero)
 
     plt.imshow(svm.w[1:].reshape(28, 28), cmap='gray')

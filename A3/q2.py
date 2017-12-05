@@ -204,10 +204,10 @@ if __name__ == '__main__':
     test_loss_zero = svm.hinge_loss(test_data, test_targets)
 
     print("train accuracy with B = 0 %s" %train_acuracy_zero)
-    #print("train loss with B = 0 %s" %train_loss_zero)
+    print("average train loss with B = 0 %s" %np.mean(train_loss_zero))
 
     print("test accuracy with B = 0 %s" % test_acuracy_zero)
-    #print("train loss with B = 0 %s" % test_loss_zero)
+    print("average test loss with B = 0 %s" % np.mean(test_loss_zero))
 
     #print(svm.w.shape)
 
@@ -228,10 +228,10 @@ if __name__ == '__main__':
     test_loss_1 = svm.hinge_loss(test_data, test_targets)
 
     print("train accuracy with B = 0.1 %s" % train_acuracy_1)
-    # print("train loss with B = 0.1 %s" %train_loss_1)
+    print("train loss with B = 0.1 %s" %np.mean(train_loss_1))
 
     print("test accuracy with B = 0.1 %s" % test_acuracy_1)
-    # print("train loss with B = 0.1 %s" % test_loss_zero)
+    print("test loss with B = 0.1 %s" % np.mean(test_loss_1))
 
     plt.imshow(svm.w[1:].reshape(28, 28), cmap='gray')
     plt.show()

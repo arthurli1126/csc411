@@ -107,7 +107,7 @@ def mnb_model(train_tf_idf, train_labels, test_tf_idf, test_labels):
     model = MultinomialNB()
     space = np.linspace(0.1,10,50)
     param_grid = dict(alpha=space)
-    grid = GridSearchCV(model, param_grid, cv=10, scoring='accuracy', n_jobs=-1)
+    grid = GridSearchCV(model, param_grid, cv=10, scoring='accuracy', n_jobs=4)
     sample_X, sample_y = sampler.get_batch()
     grid.fit(sample_X, sample_y)
     print("best alpha is {}, and accuracy is {}".format(grid.best_params_, grid.best_score_))
@@ -120,96 +120,74 @@ def mnb_model(train_tf_idf, train_labels, test_tf_idf, test_labels):
     print('multinomial train accuracy = %s' %((train_prediction== train_labels).mean()))
     print('multinomial test accuracy = %s' % ((test_prediction == test_labels).mean()))
 
-    return model
+    return model,test_prediction
 
-
-
-#this is a trash model for this task
-def knn_model(train_data, train_labels, test_data, test_labels):
-
-    knn_model = KNeighborsClassifier(kernel='linear')
-    k_range = range(1, 100)
-    param_grid = dict(n_neighbors=k_range)
-    grid = RandomizedSearchCV(knn_model, param_grid, n_iter=10, cv=10, scoring='accuracy', n_jobs=5)
-    grid.fit(train_data, train_labels)
-    print("The best hypeparameter of the knn model is %s, ".format('KNN', grid.best_params_, grid.best_score_))
-    knn_model = grid.best_estimator_
-    train_pred = knn_model.predict(train_data)
-    print('KNN train accuracy  = {}'.format((train_pred == train_labels).mean()))
-    test_pred = knn_model.predict(test_data)
-    accuracy=(test_pred == test_labels).mean()
-    print('KNN test accuracy= {}'.format(accuracy))
-
-    return knn_model,accuracy
 
 
 def svm_model(train_data, train_labels, test_data, test_labels):
 
-    sampler = BatchSampler(train_tf_idf, train_labels, 500)
-    SVM  = svm.SVC()
-    c_range = np.linspace(0.001, 10, 50)
-    param_grid = dict(C=c_range)
-    grid = GridSearchCV(svm_model, param_grid, cv=10, scoring='accuracy', n_jobs=4)
+    sampler=BatchSampler(train_data, train_labels, 5000)
+    SVM=svm.SVC()
+    c_range=np.linspace(0.001, 10, 50)
+    param_grid=dict(C=c_range)
+    grid=GridSearchCV(SVM, param_grid, cv=10, scoring='accuracy', n_jobs=4)
     sample_X, sample_y = sampler.get_batch()
     grid.fit(sample_X, sample_y)
     print("best alpha is {}, and accuracy is {}".format(grid.best_params_, grid.best_score_))
     SVM=grid.best_estimator_
-    # SVM.fit(train_data,train_labels)
-    # train_pred = SVM.predict(train_data)
-    print('SVM train accuracy = {}'.format((train_pred == train_labels).mean()))
-    test_pred = SVM.predict(test_data)
-    accuracy=(test_pred == test_labels).mean()
-    print('SVM test accuracy = {}'.format( accuracy))
+    SVM.fit(train_data,train_labels)
+    train_prediction = SVM.predict(train_data)
+    test_prediction = SVM.predict(test_data)
 
-    return SVM,accuracy
+    print('SVM train accuracy = %s' % ((train_prediction == train_labels).mean()))
+    print('SVM test accuracy = %s' % ((test_prediction == test_labels).mean()))
+
+    return SVM
 
 def random_forest(train_data, train_labels, test_data, test_labels):
-    # sampler = BatchSampler(train_tf_idf, train_labels, 500)
-    RFC = RandomForestClassifier(n_estimators=30)
-    # c_range = np.linspace(0.001, 10, 50)
-    # param_grid = dict(C=c_range)
-    # grid = GridSearchCV(svm_model, param_grid, cv=10, scoring='accuracy', n_jobs=4)
-    # sample_X, sample_y = sampler.get_batch()
-    # grid.fit(sample_X, sample_y)
-    # print("best alpha is {}, and accuracy is {}".format(grid.best_params_, grid.best_score_))
-    # SVM=grid.best_estimator_
+    sampler = BatchSampler(train_data, train_labels, 500)
+    RFC = RandomForestClassifier()
+    c_range = np.linspace(1, 50, 50, dtype=int)
+    param_grid = dict(n_estimators=c_range)
+    grid = GridSearchCV(RFC, param_grid, cv=10, scoring='accuracy', n_jobs=4)
+    sample_X, sample_y = sampler.get_batch()
+    grid.fit(sample_X, sample_y)
+    print("best n_estimator is {}, and accuracy is {}".format(grid.best_params_, grid.best_score_))
+    RFC=grid.best_estimator_
     RFC.fit(train_data, train_labels)
-    train_pred = RFC.predict(train_data)
-    print('SVM train accuracy = {}'.format((train_pred == train_labels).mean()))
-    test_pred = RFC.predict(test_data)
-    accuracy = (test_pred == test_labels).mean()
-    print('SVM test accuracy = {}'.format(accuracy))
+    train_prediction = RFC.predict(train_data)
+    test_prediction = RFC.predict(test_data)
 
+    print('rfc train accuracy = %s' % ((train_prediction == train_labels).mean()))
+    print('rfc test accuracy = %s' % ((test_prediction == test_labels).mean()))
     return RFC
 
 
 def confusion_matrix(pre_labels, test_labels):
-    k = test_labels.shape[0]
+    k = 20
     c_matrix = np.zeros((k,k))
-    for i in range(k):
+    for i in range(pre_labels.shape[0]):
         if(pre_labels[i]==test_labels[i]):
-                c_matrix[i][i] = c_matrix[i][i] + 1
-
-
-
-
+            c_matrix[test_labels[i]][test_labels[i]] = c_matrix[test_labels[i]][test_labels[i]] + 1
+        else:
+            c_matrix[test_labels[i]][pre_labels[i]] = c_matrix[test_labels[i]][pre_labels[i]] + 1
+    return c_matrix
 
 if __name__ == '__main__':
     train_data, test_data = load_data()
 
     train_bow, test_bow, feature_names = bow_features(train_data, test_data)
     train_tf_idf,test_tf_idf, feature_names = tf_idf_features(train_data, test_data)
-    print(train_bow.shape)
-    print(test_bow.shape)
-    print(train_tf_idf.shape)
-    #print(train_tf_idf[0])
-    print(test_tf_idf.shape)
-    #bnb_model = bnb_baseline(train_bow, train_data.target, test_bow, test_data.target)
-    #mnb_model = mnb_model_1(train_tf_idf, train_data.target, test_tf_idf, test_data.target)
-    #lol = mnb_model(train_tf_idf, train_data.target, test_tf_idf, test_data.target)
-    #knn = knn_model(train_tf_idf, train_data.target, test_tf_idf, test_data.target)
-    #svm_model,svm_acc = svm_model(train_tf_idf, train_data.target, test_tf_idf, test_data.target)
+    bnb_model = bnb_baseline(train_bow, train_data.target, test_bow, test_data.target)
+    mnb_model,mnb_prelabel = mnb_model(train_tf_idf, train_data.target, test_tf_idf, test_data.target)
+    svm_model = svm_model(train_tf_idf, train_data.target, test_tf_idf, test_data.target)
     RFC = random_forest(train_tf_idf, train_data.target, test_tf_idf, test_data.target)
+    c_matrix = confusion_matrix(mnb_prelabel, test_data.target)
+    c_matrix[np.diag_indices_from(c_matrix)]=0
+    confusion = np.sum(c_matrix, axis=0)
+    confusion_index = confusion.argsort()[:2]
+    print("most confusing classes are {} and {}".format(test_data.target_names[confusion_index[0]] ,
+                                                         test_data.target_names[confusion_index[1]]))
 
 
 

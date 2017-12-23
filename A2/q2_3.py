@@ -28,7 +28,7 @@ def compute_parameters(train_data, train_labels):
             if train_data[i][j] == 1:
                 eta[int(train_labels[i])][j] += 1
 
-    eta = (eta +1)/train_data.shape[0]*10
+    eta = (eta +1)/((train_data.shape[0]/10)+2)
 
     return eta
 
@@ -137,7 +137,7 @@ def main():
     generate_new_data(eta)
     avg_train_clh = avg_conditional_likelihood(train_data,train_labels, eta)
     avg_test_clh = avg_conditional_likelihood(test_data, test_labels, eta)
-    print("train: %s test: %s" %(np.exp(avg_test_clh), np.exp(avg_train_clh)))
+    print("train: %s test: %s" %(avg_test_clh, avg_train_clh))
     train_classes = classify_data(train_data,eta)
     train_accuracy = eval_accuracy(train_classes, train_labels)
     test_classes = classify_data(test_data, eta)

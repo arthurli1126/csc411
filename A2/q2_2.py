@@ -42,19 +42,19 @@ def compute_sigma_mles(train_data, train_labels):
                     covariances[k][j][i] = covariances[k][j][i] + 0.01
     return covariances
 
-def cov_compute_sigma_mles(train_data, train_labels):
-    '''
-    Compute the covariance estimate for each digit class
-
-    Should return a three dimensional numpy array of shape (10, 64, 64)
-    consisting of a covariance matrix for each digit class
-    '''
-    covariances = np.zeros((10, 64, 64))
-    # Compute covariances
-    for k in range(10):
-        i_digits = data.get_digits_by_label(train_data, train_labels, k)
-        covariances[k] = np.cov(i_digits.T)
-    return covariances
+# def cov_compute_sigma_mles(train_data, train_labels):
+#     '''
+#     Compute the covariance estimate for each digit class
+#
+#     Should return a three dimensional numpy array of shape (10, 64, 64)
+#     consisting of a covariance matrix for each digit class
+#     '''
+#     covariances = np.zeros((10, 64, 64))
+#     # Compute covariances
+#     for k in range(10):
+#         i_digits = data.get_digits_by_label(train_data, train_labels, k)
+#         covariances[k] = np.cov(i_digits.T)
+#     return covariances
 
 
 
@@ -142,25 +142,33 @@ def main():
     # Fit the model
     means = compute_mean_mles(train_data, train_labels)
     covariances = compute_sigma_mles(train_data, train_labels)
-    cov = cov_compute_sigma_mles(train_data, train_labels)
+    #cov = cov_compute_sigma_mles(train_data, train_labels)
     # print(means)
     # print(np.max(covariances))
     # print(np.max(cov))
     # print(np.linalg.det(cov)**-0.5)
-    #plot_cov_diagonal(covariances)
+    plot_cov_diagonal(covariances)
 
     #g_lh = generative_likelihood(train_data,means,covariances)
     #c_lh = conditional_likelihood(train_data,means,covariances)
     #print(np.sum(g_lh))
     #print(np.sum(np.exp(c_lh)))
 
-    # avg_clh = avg_conditional_likelihood(test_data, test_labels, means, covariances)
-    # print(avg_clh)
+    avg_test_clh = avg_conditional_likelihood(test_data, test_labels, means, covariances)
+    print("average conditional likelihood test: %s" %(avg_test_clh))
+
+    avg_train_clh = avg_conditional_likelihood(train_data, train_labels, means, covariances)
+    print("average conditional likelihood train: %s" % (avg_train_clh))
+
     # Evaluation
 
     classes = classify_data(train_data, means, covariances)
 
-    print(eval_accuracy(classes, train_labels))
+    print("train accuracy: %s" %eval_accuracy(classes, train_labels))
+
+    test_classes = classify_data(test_data, means, covariances)
+
+    print("test accuracy: %s"  %eval_accuracy(test_classes, test_labels))
 
 if __name__ == '__main__':
     main()
